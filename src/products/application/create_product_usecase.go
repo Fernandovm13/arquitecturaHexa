@@ -1,12 +1,12 @@
 package application
 
 import (
-	"holamundo/src/products/domain"       
-	"holamundo/src/products/domain/entities" 
+	"holamundo/src/products/domain/entities"
+	"holamundo/src/products/domain"
 )
 
 type CreateProductUseCase struct {
-	repo domain.ProductRepository 
+	repo domain.ProductRepository
 }
 
 func NewCreateProductUseCase(repo domain.ProductRepository) *CreateProductUseCase {

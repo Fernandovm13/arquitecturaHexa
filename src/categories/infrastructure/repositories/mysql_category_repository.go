@@ -1,13 +1,10 @@
 package repositories
 
 import (
-	"database/sql"
 	"fmt"
+	"database/sql"
 	"holamundo/src/categories/domain/entities"
-	"os"
-
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
+	"holamundo/src/core"
 )
 
 type MySQLCategoryRepository struct {
@@ -15,28 +12,18 @@ type MySQLCategoryRepository struct {
 }
 
 func NewMySQLCategoryRepository() *MySQLCategoryRepository {
-	godotenv.Load()
-
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-	)
-
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		panic(err)
-	}
-	return &MySQLCategoryRepository{db: db}
+	return &MySQLCategoryRepository{db: core.GetDB()}
 }
 
 func (repo *MySQLCategoryRepository) Save(category *entities.Category) error {
 	query := "INSERT INTO categories (name) VALUES (?)"
 	_, err := repo.db.Exec(query, category.Name)
+	if err != nil {
+		fmt.Printf("Error al insertar la categoría: %v\n", err)
+	}
 	return err
 }
+
 
 func (repo *MySQLCategoryRepository) GetAll() ([]entities.Category, error) {
 	query := "SELECT id, name FROM categories"
@@ -46,7 +33,8 @@ func (repo *MySQLCategoryRepository) GetAll() ([]entities.Category, error) {
 	}
 	defer rows.Close()
 
-	var categories []entities.Category
+	categories := make([]entities.Category, 0)
+
 	for rows.Next() {
 		var category entities.Category
 		if err := rows.Scan(&category.ID, &category.Name); err != nil {
@@ -56,6 +44,7 @@ func (repo *MySQLCategoryRepository) GetAll() ([]entities.Category, error) {
 	}
 	return categories, nil
 }
+
 
 func (repo *MySQLCategoryRepository) Update(category *entities.Category) error {
 	query := "UPDATE categories SET name=? WHERE id=?"

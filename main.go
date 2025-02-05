@@ -2,7 +2,9 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-
+	
+	"holamundo/src/core"
+	
 	productApp "holamundo/src/products/application"
 	productRepo "holamundo/src/products/infrastructure/repositories"
 	productCtrl "holamundo/src/products/infrastructure/controllers"
@@ -15,6 +17,9 @@ import (
 )
 
 func main() {
+	core.InitDB()
+	defer core.CloseDB()
+
 	pRepo := productRepo.NewMySQLProductRepository()
 	createProductUC := productApp.NewCreateProductUseCase(pRepo)
 	listProductUC := productApp.NewListProductUseCase(pRepo)
@@ -31,8 +36,8 @@ func main() {
 
 	r := gin.Default()
 
-	productInfra.SetupProductRoutes(r, pController)   
-	categoryInfra.SetupCategoryRoutes(r, cController) 
+	productInfra.SetupProductRoutes(r, pController)
+	categoryInfra.SetupCategoryRoutes(r, cController)
 
 	r.Run(":8080")
 }

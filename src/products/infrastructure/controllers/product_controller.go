@@ -22,15 +22,16 @@ func NewProductController(create *application.CreateProductUseCase, list *applic
 func (c *ProductController) CreateProduct(ctx *gin.Context) {
 	var product entities.Product
 	if err := ctx.ShouldBindJSON(&product); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 	if err := c.createUseCase.Execute(&product); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create product"})
 		return
 	}
 	ctx.JSON(http.StatusCreated, product)
 }
+
 
 func (c *ProductController) ListProducts(ctx *gin.Context) {
 	products, err := c.listUseCase.Execute()

@@ -2,12 +2,8 @@ package repositories
 
 import (
 	"database/sql"
-	"fmt"
+	"holamundo/src/core"
 	"holamundo/src/products/domain/entities"
-	"os"
-
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 )
 
 type MySQLProductRepository struct {
@@ -15,31 +11,17 @@ type MySQLProductRepository struct {
 }
 
 func NewMySQLProductRepository() *MySQLProductRepository {
-	godotenv.Load()
-
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-	)
-
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		panic(err)
-	}
-	return &MySQLProductRepository{db: db}
+	return &MySQLProductRepository{db: core.GetDB()}
 }
 
 func (repo *MySQLProductRepository) Save(product *entities.Product) error {
-	query := "INSERT INTO products (name, price) VALUES (?, ?)"
-	_, err := repo.db.Exec(query, product.Name, product.Price)
+	query := "INSERT INTO products (name, price, category_id) VALUES (?, ?, ?)"
+	_, err := repo.db.Exec(query, product.Name, product.Price, product.CategoryID)
 	return err
 }
 
 func (repo *MySQLProductRepository) GetAll() ([]entities.Product, error) {
-	query := "SELECT id, name, price FROM products"
+	query := "SELECT id, name, price, category_id FROM products"
 	rows, err := repo.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -49,7 +31,7 @@ func (repo *MySQLProductRepository) GetAll() ([]entities.Product, error) {
 	var products []entities.Product
 	for rows.Next() {
 		var product entities.Product
-		if err := rows.Scan(&product.ID, &product.Name, &product.Price); err != nil {
+		if err := rows.Scan(&product.ID, &product.Name, &product.Price, &product.CategoryID); err != nil {
 			return nil, err
 		}
 		products = append(products, product)
@@ -58,8 +40,8 @@ func (repo *MySQLProductRepository) GetAll() ([]entities.Product, error) {
 }
 
 func (repo *MySQLProductRepository) Update(product *entities.Product) error {
-	query := "UPDATE products SET name=?, price=? WHERE id=?"
-	_, err := repo.db.Exec(query, product.Name, product.Price, product.ID)
+	query := "UPDATE products SET name=?, price=?, category_id=? WHERE id=?"
+	_, err := repo.db.Exec(query, product.Name, product.Price, product.CategoryID, product.ID)
 	return err
 }
 
