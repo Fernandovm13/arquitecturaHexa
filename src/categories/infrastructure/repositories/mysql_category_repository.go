@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"fmt"
+	"errors"
 	"database/sql"
 	"holamundo/src/categories/domain/entities"
 	"holamundo/src/core"
@@ -56,4 +57,20 @@ func (repo *MySQLCategoryRepository) Delete(id int32) error {
 	query := "DELETE FROM categories WHERE id=?"
 	_, err := repo.db.Exec(query, id)
 	return err
+}
+
+func (repo *MySQLCategoryRepository) GetByID(id int32) (*entities.Category, error) {
+    query := "SELECT id, name FROM categories WHERE id = ?"
+    row := repo.db.QueryRow(query, id)
+
+    var category entities.Category
+    err := row.Scan(&category.ID, &category.Name)
+    if err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, errors.New("categoría no encontrada")
+        }
+        return nil, err
+    }
+
+    return &category, nil
 }

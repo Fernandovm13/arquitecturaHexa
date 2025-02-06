@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"errors"
 	"database/sql"
 	"holamundo/src/core"
 	"holamundo/src/products/domain/entities"
@@ -49,4 +50,20 @@ func (repo *MySQLProductRepository) Delete(id int32) error {
 	query := "DELETE FROM products WHERE id=?"
 	_, err := repo.db.Exec(query, id)
 	return err
+}
+
+func (repo *MySQLProductRepository) GetByID(id int32) (*entities.Product, error) {
+    query := "SELECT id, name, price, category_id FROM products WHERE id = ?"
+    row := repo.db.QueryRow(query, id)
+
+    var product entities.Product
+    err := row.Scan(&product.ID, &product.Name, &product.Price, &product.CategoryID)
+    if err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, errors.New("producto no encontrado")
+        }
+        return nil, err
+    }
+
+    return &product, nil
 }
