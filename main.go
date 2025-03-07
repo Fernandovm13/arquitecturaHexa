@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/gin-contrib/cors" // <-- Importa el middleware de CORS
+	"log"
+	"github.com/gin-contrib/cors" 
 	"github.com/gin-gonic/gin"
 	"holamundo/src/core"
 
@@ -9,6 +10,7 @@ import (
 	productRepo "holamundo/src/products/infrastructure/repositories"
 	productCtrl "holamundo/src/products/infrastructure/controllers"
 	productGetCtrl "holamundo/src/products/infrastructure/controllers"
+	productBuyCtrl "holamundo/src/products/infrastructure/controllers"
 
 	categoryApp "holamundo/src/categories/application"
 	categoryRepo "holamundo/src/categories/infrastructure/repositories"
@@ -23,15 +25,25 @@ func main() {
 	core.InitDB()
 	defer core.CloseDB()
 
+	rabbitMQ, err := core.NewRabbitMQ("compras")
+	if err != nil {
+		log.Fatalf("Error al conectar con RabbitMQ: %v", err)
+	}
+	defer rabbitMQ.Close()
+
 	pRepo := productRepo.NewMySQLProductRepository()
 	createProductUC := productApp.NewCreateProductUseCase(pRepo)
 	listProductUC := productApp.NewListProductUseCase(pRepo)
 	updateProductUC := productApp.NewUpdateProductUseCase(pRepo)
 	deleteProductUC := productApp.NewDeleteProductUseCase(pRepo)
-	pController := productCtrl.NewProductController(createProductUC, listProductUC, updateProductUC, deleteProductUC)
+
+	pController := productCtrl.NewProductController(createProductUC, listProductUC, updateProductUC, deleteProductUC, rabbitMQ)
 
 	getProductUC := productApp.NewGetProductUseCase(pRepo)
 	productGetController := productGetCtrl.NewProductGetController(getProductUC)
+
+	buyProductUC := productApp.NewBuyProductUseCase(pRepo, rabbitMQ)
+	productBuyController := productBuyCtrl.NewProductBuyController(buyProductUC)
 
 	cRepo := categoryRepo.NewMySQLCategoryRepository()
 	createCategoryUC := categoryApp.NewCreateCategoryUseCase(cRepo)
@@ -44,11 +56,9 @@ func main() {
 	categoryGetController := categoryGetCtrl.NewCategoryGetController(getCategoryUC)
 
 	r := gin.Default()
-
-	// Habilitar CORS con la configuración por defecto
 	r.Use(cors.Default())
 
-	productInfra.SetupProductRoutes(r, pController, productGetController)
+	productInfra.SetupProductRoutes(r, pController, productGetController, productBuyController)
 	categoryInfra.SetupCategoryRoutes(r, cController, categoryGetController)
 
 	r.Run(":8080")
