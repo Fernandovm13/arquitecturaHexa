@@ -14,7 +14,7 @@ type RabbitMQ struct {
 }
 
 func NewRabbitMQ(queueName string) (*RabbitMQ, error) {
-	conn, err := amqp091.Dial("amqp://Fernando:12345@34.201.98.45:5672/")
+	conn, err := amqp091.Dial("amqp://Fernando:12345@13.216.97.215:5672/")
 	if err != nil {
 		return nil, fmt.Errorf("error al conectar a RabbitMQ: %w", err)
 	}
@@ -26,7 +26,7 @@ func NewRabbitMQ(queueName string) (*RabbitMQ, error) {
 
 	q, err := ch.QueueDeclare(
 		queueName, // nombre de la cola
-		true,      // durable
+		true,      // durable: true para que la cola sea duradera
 		false,     // auto-delete
 		false,     // exclusive
 		false,     // no-wait
@@ -48,6 +48,7 @@ func (r *RabbitMQ) PublishMessage(message string) error {
 		amqp091.Publishing{
 			ContentType: "text/plain",
 			Body:        []byte(message),
+			DeliveryMode: amqp091.Persistent, 
 		},
 	)
 	if err != nil {

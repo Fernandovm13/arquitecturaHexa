@@ -21,7 +21,9 @@ func (uc *BuyProductUseCase) Execute(productID int32) error {
 		return fmt.Errorf("error al obtener producto: %w", err)
 	}
 
-	message := fmt.Sprintf("Producto comprado: %s (ID: %d)", product.Name, product.ID)
+	// Mensaje modificado
+	message := fmt.Sprintf("Tu producto '%s' (ID: %d) está en camino", product.Name, product.ID)
+
 	if err := uc.rabbitMQ.PublishMessage(message); err != nil {
 		return fmt.Errorf("error al enviar mensaje a RabbitMQ: %w", err)
 	}
