@@ -1,32 +1,46 @@
 package application
 
 import (
-	"fmt"
-	"holamundo/src/core"
-	"holamundo/src/products/domain"
+    "encoding/json"
+    "fmt"
+    "holamundo/src/core"
+    "holamundo/src/products/domain"
 )
 
 type BuyProductUseCase struct {
-	repo     domain.ProductRepository
-	rabbitMQ *core.RabbitMQ
+    repo     domain.ProductRepository
+    rabbitMQ *core.RabbitMQ
 }
 
 func NewBuyProductUseCase(repo domain.ProductRepository, rabbitMQ *core.RabbitMQ) *BuyProductUseCase {
-	return &BuyProductUseCase{repo: repo, rabbitMQ: rabbitMQ}
+    return &BuyProductUseCase{repo: repo, rabbitMQ: rabbitMQ}
 }
 
 func (uc *BuyProductUseCase) Execute(productID int32) error {
-	product, err := uc.repo.GetByID(productID)
-	if err != nil {
-		return fmt.Errorf("error al obtener producto: %w", err)
-	}
+    product, err := uc.repo.GetByID(productID)
+    if err != nil {
+        return fmt.Errorf("error al obtener producto: %w", err)
+    }
 
-	// Mensaje modificado
-	message := fmt.Sprintf("Tu producto '%s' (ID: %d) está en camino", product.Name, product.ID)
+    //  JSON con la información necesaria para el pago
+    purchaseData := struct {
+        ProductID   int32   `json:"product_id"`
+        ProductName string  `json:"product_name"`
+        Amount      float32 `json:"amount"`
+    }{
+        ProductID:   product.ID,
+        ProductName: product.Name,
+        Amount:      product.Price,
+    }
 
-	if err := uc.rabbitMQ.PublishMessage(message); err != nil {
-		return fmt.Errorf("error al enviar mensaje a RabbitMQ: %w", err)
-	}
+    jsonBytes, err := json.Marshal(purchaseData)
+    if err != nil {
+        return fmt.Errorf("error al serializar mensaje JSON: %w", err)
+    }
 
-	return nil
+    if err := uc.rabbitMQ.PublishMessage(string(jsonBytes)); err != nil {
+        return fmt.Errorf("error al enviar mensaje a RabbitMQ: %w", err)
+    }
+
+    return nil
 }
