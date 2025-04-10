@@ -4,7 +4,6 @@ import (
     "errors"
     "holamundo/src/categories/domain"
     "holamundo/src/categories/domain/entities"
-    "holamundo/src/categories/infrastructure/repositories"
 )
 
 type GetCategoryUseCase struct {
@@ -16,8 +15,9 @@ func NewGetCategoryUseCase(repo domain.CategoryRepository) *GetCategoryUseCase {
 }
 
 func (uc *GetCategoryUseCase) Execute(id int32) (*entities.Category, error) {
-    if repoImpl, ok := uc.repo.(*repositories.MySQLCategoryRepository); ok {
-        return repoImpl.GetByID(id)
+    category, err := uc.repo.GetByID(id)
+    if err != nil {
+        return nil, errors.New("categoría no encontrada")
     }
-    return nil, errors.New("")
+    return category, nil
 }

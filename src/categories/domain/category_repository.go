@@ -7,5 +7,5 @@ type CategoryRepository interface {
 	GetAll() ([]entities.Category, error)
 	Update(category *entities.Category) error
 	Delete(id int32) error
-	GetByID(id int32) (*entities.Category, error) 
+	GetByID(id int32) (*entities.Category, error)
 }

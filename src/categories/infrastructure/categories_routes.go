@@ -5,11 +5,10 @@ import (
 	"holamundo/src/categories/infrastructure/controllers"
 )
 
-func SetupCategoryRoutes(r *gin.Engine, categoryController *controllers.CategoryController, categoryGetController *controllers.CategoryGetController) {
-	r.POST("/categories", categoryController.CreateCategory)
-	r.GET("/categories", categoryController.ListCategories)
-	r.PUT("/categories", categoryController.UpdateCategory)
-	r.DELETE("/categories/:id", categoryController.DeleteCategory)
-	r.GET("/categories/:id", categoryGetController.GetCategory)
+func SetupCategoryRoutes(r *gin.Engine, cController *controllers.CategoryController, categoryGetController *controllers.CategoryGetController) {
+	r.POST("/categories", cController.CreateCategory)       
+	r.GET("/categories", cController.ListCategories)         
+	r.GET("/categories/:id", categoryGetController.GetCategory) 
+	r.PUT("/categories", cController.UpdateCategory)        
+	r.DELETE("/categories/:id", cController.DeleteCategory) 
 }
-
